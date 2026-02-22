@@ -10,7 +10,7 @@
     "bonjour-service": "^1.2.1",
     "protobufjs": "^7.4.0",
     "selfsigned": "^2.4.1",
-    "sonos": "^1.15.0",
+    "sonos": "^1.14.0",
     "uuid": "^10.0.0"
   }
 }
