@@ -1,4 +1,4 @@
-ARG BUILD_FROM
+ARG BUILD_FROM=ghcr.io/hassio-addons/debian-base:9.2.0
 FROM ${BUILD_FROM}
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -15,7 +15,7 @@ COPY app/ /opt/sonoscast/
 
 # Install Node.js dependencies
 RUN cd /opt/sonoscast \
-    && npm install --omit=dev --no-optional \
+    && npm install --omit=dev --omit=optional \
     && npm cache clean --force
 
 # Copy root filesystem
