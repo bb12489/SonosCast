@@ -1,0 +1,24 @@
+#!/command/with-contenv bashio
+# shellcheck shell=bash
+# ==============================================================================
+# SonosCast - Initialize configuration
+# ==============================================================================
+
+bashio::log.info "Initializing SonosCast..."
+
+# Ensure the addon config directory exists
+if ! bashio::fs.directory_exists "/config"; then
+  mkdir -p /config
+fi
+
+# Verify the Node.js application is present
+if ! bashio::fs.file_exists "/opt/sonoscast/index.js"; then
+  bashio::exit.nok "SonosCast application not found at /opt/sonoscast"
+fi
+
+# Verify Node.js is available
+if ! command -v node &> /dev/null; then
+  bashio::exit.nok "Node.js is not installed"
+fi
+
+bashio::log.info "SonosCast initialized successfully"
