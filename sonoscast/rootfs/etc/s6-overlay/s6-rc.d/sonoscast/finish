@@ -1,0 +1,28 @@
+#!/command/with-contenv bashio
+# shellcheck shell=bash
+# ==============================================================================
+# SonosCast - Handle service exit
+# ==============================================================================
+declare exit_code_container
+declare exit_code_sonoscast
+
+exit_code_sonoscast="${1}"
+
+if [[ "${exit_code_sonoscast}" -eq 256 ]]; then
+  exit_code_container=$(</run/s6-linux-init-container-results/exitcode)
+  if [[ "${exit_code_container}" -eq 0 ]]; then
+    # The service exited with signal
+    exit_code_sonoscast=$((128 + ${2}))
+  fi
+  if [[ "${exit_code_sonoscast}" -eq 143 ]]; then
+    # SIGTERM - normal shutdown
+    bashio::log.info "SonosCast stopped (SIGTERM)"
+    exec /run/s6/basedir/bin/halt
+  fi
+fi
+
+if [[ "${exit_code_sonoscast}" -ne 0 ]]; then
+  bashio::log.warning "SonosCast exited with code ${exit_code_sonoscast}"
+  echo "${exit_code_sonoscast}" > /run/s6-linux-init-container-results/exitcode
+  exec /run/s6/basedir/bin/halt
+fi

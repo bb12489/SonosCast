@@ -1,0 +1,19 @@
+---
+configuration:
+  log_level:
+    name: Log level
+    description: Controls the verbosity of log output.
+  base_port:
+    name: Base port
+    description: >-
+      Starting port for virtual Cast device servers. Each Sonos speaker
+      gets a sequential port from this value.
+  latency:
+    name: Latency
+    description: >-
+      Audio latency compensation in milliseconds. Increase if audio
+      is out of sync.
+  excluded_speakers:
+    name: Excluded speakers
+    description: >-
+      List of Sonos speaker room names to exclude from Cast bridging.

@@ -1,0 +1,28 @@
+---
+name: SonosCast
+version: dev
+slug: sonoscast
+description: >-
+  Google Cast capabilities for your Sonos speakers.
+  Discovers Sonos players on your network and creates virtual
+  Google Cast devices for each one.
+url: https://github.com/user/SonosCast
+startup: services
+init: false
+hassio_api: true
+host_network: true
+arch:
+  - aarch64
+  - amd64
+map:
+  - addon_config:rw
+options:
+  base_port: 8009
+  latency: 0
+  excluded_speakers: []
+schema:
+  log_level: list(trace|debug|info|notice|warning|error|fatal)?
+  base_port: port
+  latency: "int(0,5000)"
+  excluded_speakers:
+    - str

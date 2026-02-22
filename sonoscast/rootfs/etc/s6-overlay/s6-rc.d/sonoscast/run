@@ -1,0 +1,13 @@
+#!/command/with-contenv bashio
+# shellcheck shell=bash
+# ==============================================================================
+# SonosCast - Run the Cast-to-Sonos bridge
+# ==============================================================================
+declare -a options
+
+bashio::log.info "Starting SonosCast..."
+
+# Pass addon options as environment variables for the Node.js app
+cd /opt/sonoscast || bashio::exit.nok "Cannot find SonosCast application"
+
+exec node index.js
