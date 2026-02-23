@@ -208,7 +208,7 @@ class CastDevice extends EventEmitter {
   _handleDeviceAuth(clientId, sourceId, data) {
     log.info(COMPONENT, `[${this.friendlyName}] Device auth challenge received from ${sourceId}`);
 
-    // Use Shanocast authentication bypass with precomputed signatures
+    // Use precomputed signatures for authentication
     // This exploits Chrome's enforce_nonce_checking=false vulnerability
     try {
       // Parse the auth challenge
@@ -226,7 +226,7 @@ class CastDevice extends EventEmitter {
           CASTV2_NS_DEVICEAUTH,
           authResponseBuffer
         );
-        log.info(COMPONENT, `[${this.friendlyName}] Auth response sent (Shanocast bypass)`);
+        log.info(COMPONENT, `[${this.friendlyName}] Auth response sent successfully`);
       } else {
         // Fallback to error response if no valid signature available
         log.warn(COMPONENT, `[${this.friendlyName}] No valid signature, sending auth error`);

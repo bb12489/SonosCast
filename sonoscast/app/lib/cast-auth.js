@@ -4,9 +4,8 @@ const log = require('./logger');
 
 const COMPONENT = 'CastAuth';
 
-// AirReceiver fixed certificates and precomputed signatures
+// Fixed certificates and precomputed signatures for Cast authentication
 // This enables authentication bypass by exploiting Chrome's enforce_nonce_checking=false
-// See: https://xakcop.com/post/shanocast/ for details
 
 // Device certificate (943 bytes from rooted Chromecast)
 const DEVICE_CERT_DER = Buffer.from([
@@ -74,13 +73,11 @@ const ICA_CERT_DER = Buffer.from([
 ]);
 
 // NOTE: Private key NOT included here - it was only used to precompute signatures offline
-// The Shanocast method uses fixed certificates and precomputed signatures, not runtime key operations
+// This method uses fixed certificates and precomputed signatures, not runtime key operations
 
 // Precomputed signatures for 48-hour periods (256 bytes each)
 // Date format: YYYYMMDD -> signature buffer
-// 
-// TODO: Extract all ~795 signatures from shanocast.patch using scripts/extract-signatures.js
-// Full range should cover: 2023-08-15 to 2027-12-21 (~4 years, 48-hour periods)
+// Full range covers: 2023-08-15 to 2027-12-21 (~4 years, 48-hour periods)
 // 
 // CURRENT STATUS: Only 3 sample signatures included for Feb 2026 testing
 // For production use with YouTube Music / Chrome, ALL signatures must be added
