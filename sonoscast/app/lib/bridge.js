@@ -51,9 +51,11 @@ class Bridge {
     this._localIP = getLocalNetworkIP();
     if (this._localIP) {
       log.info(COMPONENT, `Binding mDNS to local network: ${this._localIP}`);
+      this._bonjour = new Bonjour({ interface: this._localIP });
+    } else {
+      this._bonjour = new Bonjour();
     }
     
-    this._bonjour = new Bonjour();
     this._deviceRegistry = new DeviceRegistry();
     this._castDevices = new Map(); // speakerIp -> CastDevice
     this._nextPort = config.basePort;

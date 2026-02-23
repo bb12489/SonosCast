@@ -79,7 +79,8 @@ class CastDevice extends EventEmitter {
       log.error(COMPONENT, `[${this.friendlyName}] Server error: ${err.message}`);
     });
 
-    await this._server.listen(this.port);
+    // Bind to local IP if available (prevents Tailscale interface issues)
+    await this._server.listen(this.port, this.localIP || '0.0.0.0');
 
     // Advertise via mDNS
     this._advertiseMdns();
@@ -129,16 +130,12 @@ class CastDevice extends EventEmitter {
       txt: txtRecord,
     };
     
-    // Bind to local network IP if available (avoids Tailscale interface)
-    if (this.localIP) {
-      publishOptions.host = this.localIP;
-    }
-    
     this._mdnsService = this._bonjour.publish(publishOptions);
 
+    const bindInfo = this.localIP ? ` on ${this.localIP}` : '';
     log.debug(
       COMPONENT,
-      `mDNS advertised: ${this.friendlyName} (_googlecast._tcp, port ${this.port})`
+      `mDNS advertised: ${this.friendlyName} (_googlecast._tcp, port ${this.port}${bindInfo})`
     );
   }
 
