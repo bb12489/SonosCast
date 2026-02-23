@@ -31,7 +31,10 @@ class CastDevice extends EventEmitter {
     this.speakerIp = options.speakerIp;
     this.port = options.port;
     this.deviceId = options.deviceId || uuidv4().replace(/-/g, '');
-    this.friendlyName = `${this.speakerName} (Cast)`;
+    // Include IP suffix to make mDNS service names unique when multiple
+    // speakers share the same room name
+    const ipSuffix = this.speakerIp.split('.').pop();
+    this.friendlyName = `${this.speakerName} (Cast-${ipSuffix})`;
 
     this._server = null;
     this._bonjour = options.bonjour;
