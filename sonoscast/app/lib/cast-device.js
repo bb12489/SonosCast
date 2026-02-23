@@ -31,6 +31,7 @@ class CastDevice extends EventEmitter {
     this.speakerIp = options.speakerIp;
     this.port = options.port;
     this.deviceId = options.deviceId || uuidv4().replace(/-/g, '');
+    this.certificate = options.certificate || null; // May be provided by DeviceRegistry
     // Include IP suffix to make mDNS service names unique when multiple
     // speakers share the same room name
     const ipSuffix = this.speakerIp.split('.').pop();
@@ -48,13 +49,20 @@ class CastDevice extends EventEmitter {
   }
 
   async start() {
-    // Generate self-signed TLS certificate
-    const attrs = [{ name: 'commonName', value: this.friendlyName }];
-    const pems = selfsigned.generate(attrs, {
-      keySize: 2048,
-      days: 3650,
-      algorithm: 'sha256',
-    });
+    // Use provided certificate or generate a new self-signed one
+    let pems;
+    if (this.certificate) {
+      pems = this.certificate;
+      log.debug(COMPONENT, `[${this.friendlyName}] Using persisted certificate`);
+    } else {
+      const attrs = [{ name: 'commonName', value: this.friendlyName }];
+      pems = selfsigned.generate(attrs, {
+        keySize: 2048,
+        days: 3650,
+        algorithm: 'sha256',
+      });
+      log.debug(COMPONENT, `[${this.friendlyName}] Generated new certificate`);
+    }
 
     // Create Cast protocol server
     this._server = new CastProtocolServer({

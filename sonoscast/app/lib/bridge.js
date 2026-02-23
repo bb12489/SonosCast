@@ -3,6 +3,7 @@
 const Bonjour = require('bonjour-service').Bonjour;
 const SonosManager = require('./sonos-manager');
 const CastDevice = require('./cast-device');
+const DeviceRegistry = require('./device-registry');
 const log = require('./logger');
 
 const COMPONENT = 'Bridge';
@@ -17,6 +18,7 @@ class Bridge {
     this.config = config;
     this._sonosManager = new SonosManager(config.excludedSpeakers);
     this._bonjour = new Bonjour();
+    this._deviceRegistry = new DeviceRegistry();
     this._castDevices = new Map(); // speakerIp -> CastDevice
     this._nextPort = config.basePort;
   }
@@ -56,11 +58,21 @@ class Bridge {
     }
 
     const port = this._nextPort++;
+    
+    // Generate IP-based suffix for unique mDNS names
+    const ipSuffix = speaker.ip.split('.').pop();
+    const friendlyName = `${speaker.name} (Cast-${ipSuffix})`;
+    
+    // Get or create persistent device identity
+    const identity = this._deviceRegistry.getOrCreateDevice(speaker.ip, friendlyName);
+    
     const castDevice = new CastDevice({
       speakerName: speaker.name,
       speakerIp: speaker.ip,
       port,
       bonjour: this._bonjour,
+      deviceId: identity.deviceId,
+      certificate: identity.certificate,
     });
 
     // Wire up media events to Sonos actions

@@ -75,6 +75,37 @@ enabled by default and is necessary for:
 Ensure that your Home Assistant host is on the same network/VLAN as
 both your Cast sender devices and Sonos speakers.
 
+## Preventing Duplicate Devices in Home Assistant
+
+**Important**: Home Assistant's built-in Google Cast integration will
+automatically discover the virtual Cast devices created by this addon.
+This creates duplicate device entries in your device registry each time
+the addon restarts.
+
+To prevent this, you should **disable or configure** the Google Cast
+integration:
+
+### Option 1: Disable Google Cast Integration (Recommended)
+
+If you don't need Home Assistant to discover real Chromecast devices,
+disable the integration entirely:
+
+1. Go to **Settings** → **Devices & Services**
+2. Find the **Google Cast** integration
+3. Click the three dots menu → **Delete**
+
+### Option 2: Ignore Virtual Cast Devices
+
+If you want to keep the Cast integration for real Chromecast devices:
+
+1. Go to **Settings** → **Devices & Services** → **Google Cast**
+2. Configure the integration to ignore devices matching the pattern `*Cast-*`
+   (the virtual devices created by SonosCast follow this naming pattern)
+
+**Note**: Even with persistence enabled (as of recent updates), the virtual
+Cast devices maintain stable device IDs across restarts to minimize duplicate
+entries.
+
 ## Known Limitations
 
 ### Google Cast Device Authentication
