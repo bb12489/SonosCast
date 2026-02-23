@@ -114,7 +114,7 @@ class CastDevice extends EventEmitter {
       md: 'Chromecast Audio',
       ic: '/setup/icon.png',
       fn: this.friendlyName,
-      ca: '4',
+      ca: '2',
       st: '0',
       bs: this.deviceId.substring(0, 12),
       nf: '1',
