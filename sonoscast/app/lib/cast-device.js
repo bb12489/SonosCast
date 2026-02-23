@@ -13,6 +13,7 @@ const {
   CASTV2_NS_MEDIA,
   CASTV2_NS_DEVICEAUTH,
 } = require('./cast-protocol');
+const castAuth = require('./cast-auth');
 
 const COMPONENT = 'CastDevice';
 
@@ -205,26 +206,60 @@ class CastDevice extends EventEmitter {
 
   // --- Device Auth namespace ---
   _handleDeviceAuth(clientId, sourceId, data) {
-    log.debug(COMPONENT, `[${this.friendlyName}] Device auth challenge received from ${sourceId}`);
+    log.info(COMPONENT, `[${this.friendlyName}] Device auth challenge received from ${sourceId}`);
 
-    // We cannot provide a valid Google-signed device certificate.
-    // Respond with an auth error. Official Cast SDK senders will
-    // disconnect, but some third-party senders may proceed anyway.
+    // Use Shanocast authentication bypass with precomputed signatures
+    // This exploits Chrome's enforce_nonce_checking=false vulnerability
     try {
-      const authError = deviceAuthType.create({
-        error: { errorType: 0 }, // INTERNAL_ERROR
-      });
-      const encoded = deviceAuthType.encode(authError).finish();
+      // Parse the auth challenge
+      const challenge = deviceAuthType.decode(data);
+      log.debug(COMPONENT, `[${this.friendlyName}] AuthChallenge received`);
 
-      this._server.send(
-        clientId,
-        'receiver-0',
-        sourceId,
-        CASTV2_NS_DEVICEAUTH,
-        encoded
-      );
+      // Generate auth response with precomputed signature
+      const authResponseBuffer = castAuth.handleAuthChallenge(challenge);
+      
+      if (authResponseBuffer) {
+        this._server.send(
+          clientId,
+          'receiver-0',
+          sourceId,
+          CASTV2_NS_DEVICEAUTH,
+          authResponseBuffer
+        );
+        log.info(COMPONENT, `[${this.friendlyName}] Auth response sent (Shanocast bypass)`);
+      } else {
+        // Fallback to error response if no valid signature available
+        log.warn(COMPONENT, `[${this.friendlyName}] No valid signature, sending auth error`);
+        const authError = deviceAuthType.create({
+          error: { errorType: 0 }, // INTERNAL_ERROR
+        });
+        const encoded = deviceAuthType.encode(authError).finish();
+        this._server.send(
+          clientId,
+          'receiver-0',
+          sourceId,
+          CASTV2_NS_DEVICEAUTH,
+          encoded
+        );
+      }
     } catch (err) {
-      log.warning(COMPONENT, `Failed to send auth error: ${err.message}`);
+      log.error(COMPONENT, `[${this.friendlyName}] Auth handler failed: ${err.message}`);
+      // Send error response
+      try {
+        const authError = deviceAuthType.create({
+          error: { errorType: 0 },
+        });
+        const encoded = deviceAuthType.encode(authError).finish();
+        this._server.send(
+          clientId,
+          'receiver-0',
+          sourceId,
+          CASTV2_NS_DEVICEAUTH,
+          encoded
+        );
+      } catch (fallbackErr) {
+        log.error(COMPONENT, `[${this.friendlyName}] Failed to send auth error: ${fallbackErr.message}`);
+      }
     }
   }
 
