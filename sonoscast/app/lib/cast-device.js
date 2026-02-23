@@ -33,6 +33,7 @@ class CastDevice extends EventEmitter {
     this.port = options.port;
     this.deviceId = options.deviceId || uuidv4().replace(/-/g, '');
     this.certificate = options.certificate || null; // May be provided by DeviceRegistry
+    this.localIP = options.localIP || null; // Local network IP to bind to
     // Include IP suffix to make mDNS service names unique when multiple
     // speakers share the same room name
     const ipSuffix = this.speakerIp.split('.').pop();
@@ -121,12 +122,19 @@ class CastDevice extends EventEmitter {
       rs: '',
     };
 
-    this._mdnsService = this._bonjour.publish({
+    const publishOptions = {
       name: this.friendlyName,
       type: 'googlecast',
       port: this.port,
       txt: txtRecord,
-    });
+    };
+    
+    // Bind to local network IP if available (avoids Tailscale interface)
+    if (this.localIP) {
+      publishOptions.host = this.localIP;
+    }
+    
+    this._mdnsService = this._bonjour.publish(publishOptions);
 
     log.debug(
       COMPONENT,

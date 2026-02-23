@@ -1,5 +1,6 @@
 'use strict';
 
+const os = require('os');
 const Bonjour = require('bonjour-service').Bonjour;
 const SonosManager = require('./sonos-manager');
 const CastDevice = require('./cast-device');
@@ -7,6 +8,34 @@ const DeviceRegistry = require('./device-registry');
 const log = require('./logger');
 
 const COMPONENT = 'Bridge';
+
+/**
+ * Get the local network IP address (not Tailscale or loopback).
+ * Prioritizes 192.168.x.x and 10.x.x.x private networks.
+ */
+function getLocalNetworkIP() {
+  const interfaces = os.networkInterfaces();
+  
+  for (const name of Object.keys(interfaces)) {
+    // Skip Tailscale, loopback, and virtual interfaces
+    if (name.includes('tailscale') || name.includes('docker') || 
+        name.includes('veth') || name.includes('lo')) {
+      continue;
+    }
+    
+    for (const iface of interfaces[name]) {
+      // Skip IPv6, loopback, and Tailscale ranges (100.x.x.x)
+      if (iface.family === 'IPv4' && !iface.internal && 
+          !iface.address.startsWith('100.')) {
+        log.debug(COMPONENT, `Detected local network IP: ${iface.address} on ${name}`);
+        return iface.address;
+      }
+    }
+  }
+  
+  log.warning(COMPONENT, 'Could not detect local network IP, using default');
+  return null;
+}
 
 /**
  * Orchestrates the Cast-to-Sonos bridge.
@@ -17,6 +46,13 @@ class Bridge {
   constructor(config) {
     this.config = config;
     this._sonosManager = new SonosManager(config.excludedSpeakers);
+    
+    // Get local network IP to avoid advertising on Tailscale
+    this._localIP = getLocalNetworkIP();
+    if (this._localIP) {
+      log.info(COMPONENT, `Binding mDNS to local network: ${this._localIP}`);
+    }
+    
     this._bonjour = new Bonjour();
     this._deviceRegistry = new DeviceRegistry();
     this._castDevices = new Map(); // speakerIp -> CastDevice
@@ -73,6 +109,7 @@ class Bridge {
       bonjour: this._bonjour,
       deviceId: identity.deviceId,
       certificate: identity.certificate,
+      localIP: this._localIP,
     });
 
     // Wire up media events to Sonos actions
